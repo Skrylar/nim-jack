@@ -1,3 +1,4 @@
+{.passl: "-ljack".}
 
 const
    jackh = "<jack/jack.h>"
@@ -10,9 +11,9 @@ const
    JACK_PARAM_STRING_MAX* = 127
 
 type
-   PJackClient* {.importc: "jack_client_t", header: jackh.} = distinct pointer
-   PJackPort* {.importc: "jack_port_t", header: jackh.} = distinct pointer
-   JackNativeThread {.importc: "jack_native_thread_t", header: jackh.} = distinct pointer
+   PJackClient* {.importc: "jack_client_t*", header: jackh.} = distinct pointer
+   PJackPort* {.importc: "jack_port_t*", header: jackh.} = distinct pointer
+   JackNativeThread {.importc: "jack_native_thread_t*", header: jackh.} = distinct pointer
 
    JackNFrames* = uint32
    JackTime* = uint64
@@ -27,7 +28,8 @@ type
    Jack_port_id* = uint64
    Jack_port_type_id* = uint64
 
-   JackOptions* {.importc: "jack_options_t".} = enum
+   JackOptions* = int
+   JackOptionsEnum* {.importc: "jack_options_t".} = enum
       JackNullOption = 0x00,
       JackNoStartServer = 0x01,
       JackUseExactName = 0x02,
@@ -36,7 +38,8 @@ type
       JackLoadInit = 0x10,
       JackSessionID = 0x20
 
-   JackStatus* {.importc: "jack_status_t".} = enum
+   JackStatus* = int
+   JackStatusEnum* {.importc: "jack_status_t".} = enum
       JackFailure = 0x01,
       JackInvalidOption = 0x02,
       JackNameNotUnique = 0x04,
@@ -208,7 +211,7 @@ proc jack_get_version_string*(): cstring {.importc: "jack_get_version_string", h
 
 # Creating & manipulating clients
 
-proc jack_client_open *(client_name: cstring, options: Jack_options, status: ptr Jack_status): PJackClient {.importc: "jack_client_open", varargs.}
+proc jack_client_open *(client_name: cstring, options: Jack_options, status: ptr Jack_status): PJackClient {.importc: "jack_client_open", header: jackh, varargs.}
 proc jack_client_close*(client: PJackClient): int {.importc: "jack_client_close", header: jackh.}
 proc jack_client_name_size*(): int {.importc: "jack_client_name_size", header: jackh.}
 proc jack_get_client_name*(client: PJackClient): cstring {.importc: "jack_get_client_name", header: jackh.}
