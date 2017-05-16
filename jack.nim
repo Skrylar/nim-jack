@@ -7,6 +7,7 @@ const
    JACK_MAX_FRAMES = (4294967295U)
    JACK_LOAD_INIT_LIMIT = 1024
    THREAD_STACK = 524288
+   JACK_PARAM_STRING_MAX = 127
 
 type
    PJackClient {.importc: "jack_client_t", header: jackh.} = distinct pointer
@@ -161,6 +162,45 @@ type
       reserved: uint32
 
    JackSessionCallback = proc(event: ptr JackSessionEvent, arg: pointer) {.cdecl.}
+
+   JackctlParameterValue {.union.} = object
+      ui: uint32
+      i: int32
+      c: char
+      str: array[0..JACK_PARAM_STRING_MAX, char]
+      b: bool
+
+   JackctlServer {.importc: "jackctl_server_t".} = distinct pointer
+   JackctlDriver {.importc: "jackctl_driver_t".} = distinct pointer
+   JackctlInternal {.importc: "jackctl_internal_t".} = distinct pointer
+   JackctlParameter {.importc: "jackctl_parameter_t".} = distinct pointer
+
+   JSList {.importc: "JSList".} = object
+      data: pointer
+      next: ptr JSList
+
+   Jackctl_parameter_type {.importc: "jackctl_param_type_t".} = enum
+      JackParamInt = 1,
+      JackParamUInt,
+      JackParamChar,
+      JackParamString,
+      JackParamBool
+
+   JackProperty {.importc: "jack_property_t".} = object
+      key, data, typ: cstring
+
+   JackPropertyChange {.importc: "jack_property_change_t".} = enum
+      PropertyCreated,
+      PropertyChanged,
+      PropertyDeleted
+
+   JackDescription {.importc: "jack_description_t".} = object
+      subject: JackUUID
+      property_count: uint32
+      properties: ptr JackProperty
+      property_size: uint32
+
+   JackPropertyChangeCallback {.importc.} = proc(subject: Jack_uuid, key: cstring, change: Jack_property_change, arg: pointer)
 
 proc jack_get_version(major_ptr: ptr int, minor_ptr: ptr int, micro_ptr: ptr int, proto_ptr: ptr int) {.importc: "jack_get_version", header: jackh.}
 
@@ -344,4 +384,64 @@ proc jack_set_session_callback (client: PJackClient, session_callback: JackSessi
 proc jack_session_reply (client: PJackClient, event: ptr Jack_session_event): int {.importc: "jack_session_reply ", header: jackh.}
 proc jack_session_event_free (event: ptr Jack_session_event) {.importc: "jack_session_event_free ", header: jackh.}
 proc jack_client_get_uuid (client: PJackClient): cstring {.importc: "jack_client_get_uuid ", header: jackh.}
+
+# Start and Control JACK Server
+
+#TODO
+#sigset_t 	jackctl_setup_signals (unsigned int flags)
+#void 	jackctl_wait_signals (sigset_t signals)
+
+type
+   JackOnDeviceAcquire = proc(device_name: cstring)
+   JackOnDeviceRelease = proc(device_name: cstring)
+
+proc jackctl_server_create(af: JackOnDeviceAcquire, rf: JackOnDeviceRelease): JackctlServer {.importc: "jackctl_server_create", header: jackh.}
+proc jackctl_server_destroy(server: JackctlServer) {.importc: "jackctl_server_destroy", header: jackh.}
+proc jackctl_server_start(server: JackctlServer, driver: JackctlDriver): bool {.importc: "jackctl_server_start", header: jackh.}
+proc jackctl_server_stop(server: JackctlServer): bool {.importc: "jackctl_server_stop", header: jackh.}
+proc jackctl_server_get_drivers_list(server: JackctlServer): ptr JSList {.importc: "jackctl_server_get_drivers_list", header: jackh.}
+proc jackctl_server_get_parameters(server: JackctlServer): ptr JSList {.importc: "jackctl_server_get_parameters", header: jackh.}
+proc jackctl_server_get_internals_list(server: JackctlServer): ptr JSList {.importc: "jackctl_server_get_internals_list", header: jackh.}
+proc jackctl_server_load_internal(server: JackctlServer, internal: JackctlInternal): bool {.importc: "jackctl_server_load_internal", header: jackh.}
+proc jackctl_server_unload_internal(server: JackctlServer, internal: JackctlInternal): bool {.importc: "jackctl_server_unload_internal", header: jackh.}
+proc jackctl_server_add_slave(server: JackctlServer, driver: JackctlDriver): bool {.importc: "jackctl_server_add_slave", header: jackh.}
+proc jackctl_server_remove_slave(server: JackctlServer, driver: JackctlDriver): bool {.importc: "jackctl_server_remove_slave", header: jackh.}
+proc jackctl_server_switch_master(server: JackctlServer, driver: JackctlDriver): bool {.importc: "jackctl_server_switch_master", header: jackh.}
+proc jackctl_driver_get_name(driver: JackctlDriver): cstring {.importc: "jackctl_driver_get_name", header: jackh.}
+proc jackctl_driver_get_parameters(driver: JackctlDriver): ptr JSList {.importc: "jackctl_driver_get_parameters", header: jackh.}
+proc jackctl_internal_get_name(internal: JackctlInternal): cstring {.importc: "jackctl_internal_get_name", header: jackh.}
+proc jackctl_internal_get_parameters(internal: JackctlInternal) {.importc: "jackctl_internal_get_parameters", header: jackh.}
+proc jackctl_parameter_get_name(parameter: JackctlParameter): cstring {.importc: "jackctl_parameter_get_name", header: jackh.}
+proc jackctl_parameter_get_short_description(parameter: JackctlParameter): cstring {.importc: "jackctl_parameter_get_short_description", header: jackh.}
+proc jackctl_parameter_get_long_description(parameter: JackctlParameter): cstring {.importc: "jackctl_parameter_get_long_description", header: jackh.}
+proc jackctl_parameter_get_type(parameter: JackctlParameter): JackctlParameterType {.importc: "jackctl_parameter_get_type ", header: jackh.}
+proc jackctl_parameter_get_id(parameter: JackctlParameter): uint8 {.importc: "jackctl_parameter_get_id", header: jackh.}
+proc jackctl_parameter_is_set(parameter: JackctlParameter): bool {.importc: "jackctl_parameter_is_set", header: jackh.}
+proc jackctl_parameter_reset(parameter: JackctlParameter): bool {.importc: "jackctl_parameter_reset", header: jackh.}
+proc jackctl_parameter_get_value(parameter: JackctlParameter): JackctlParameterValue {.importc: "jackctl_parameter_get_value", header: jackh.}
+proc jackctl_parameter_set_value(parameter: JackctlParameter, value_ptr: ptr Jackctl_parameter_value): bool {.importc: "jackctl_parameter_set_value", header: jackh.}
+proc jackctl_parameter_get_default_value(parameter: JackctlParameter): JackctlParameterValue {.importc: "jackctl_parameter_get_default_value", header: jackh.}
+proc jackctl_parameter_has_range_constraint(parameter: JackctlParameter): bool {.importc: "jackctl_parameter_has_range_constraint", header: jackh.}
+proc jackctl_parameter_has_enum_constraint(parameter: JackctlParameter): bool {.importc: "jackctl_parameter_has_enum_constraint", header: jackh.}
+proc jackctl_parameter_get_enum_constraints_count(parameter: JackctlParameter): uint32 {.importc: "jackctl_parameter_get_enum_constraints_count", header: jackh.}
+proc jackctl_parameter_get_enum_constraint_value(parameter: JackctlParameter, index: uint32): JackctlParameterValue {.importc: "jackctl_parameter_get_enum_constraint_value", header: jackh.}
+proc jackctl_parameter_get_enum_constraint_description(parameter: JackctlParameter, index: uint32): cstring {.importc: "jackctl_parameter_get_enum_constraint_description", header: jackh.}
+proc jackctl_parameter_get_range_constraint(parameter: JackctlParameter, min_ptr, max_ptr: ptr JackctlParameterValue) {.importc: "jackctl_parameter_get_range_constraint", header: jackh.}
+proc jackctl_parameter_constraint_is_strict(parameter: JackctlParameter): bool {.importc: "proc jackctl_parameter_constraint_is_strict", header: jackh.}
+proc jackctl_parameter_constraint_is_fake_value(parameter: JackctlParameter): bool {.importc: "jackctl_parameter_constraint_is_fake_value", header: jackh.}
+proc jack_error(format: cstring) {.importc: "jack_error", header: jackh, varargs.}
+proc jack_info(format: cstring) {.importc: "jack_info", header: jackh, varargs.}
+proc jack_log(format: cstring) {.importc: "jack_log", header: jackh, varargs.}
+
+# Metadata API
+
+proc jack_set_property(client: PJack_client, subject: Jack_uuid, key, value, typ: cstring): int {.importc: "jack_set_property", header: jackh.}
+proc jack_get_property(subject: Jack_uuid, key: cstring, value, typ: ptr cstring): int {.importc: "jack_get_property", header: jackh.}
+proc jack_free_description(desc: ptr Jack_description, free_description_itself: int): int {.importc: "jack_free_description", header: jackh.}
+proc jack_get_properties(subject: Jack_uuid, desc: ptr Jack_description): int {.importc: "jack_get_properties", header: jackh.}
+proc jack_get_all_properties(descs: ptr ptr Jack_description): int {.importc: "jack_get_all_properties", header: jackh.}
+proc jack_remove_property(client: PJack_client, subject: Jack_uuid): int {.importc: "jack_remove_property", header: jackh.}
+proc jack_remove_properties(client: PJack_client, subject: Jack_uuid): int {.importc: "jack_remove_properties", header: jackh.}
+proc jack_remove_all_properties(client: PJack_client): int {.importc: "jack_remove_all_properties", header: jackh.}
+proc jack_set_property_change_callback (client: PJack_client, cb: JackPropertyChangeCallback, arg: pointer): int {.importc: "jack_set_property_change_callback ", header: jackh.}
 
