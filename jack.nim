@@ -145,6 +145,23 @@ type
    JackMidiEvent {.importc: "jack_midi_event_t", header: jackh.} = distinct pointer
    JackMidiData = uint8
 
+   JackSessionEventType {.importc.} = enum
+      JackSessionSave = 1,
+      JackSessionSaveAndQuit = 2,
+      JackSessionSaveTemplate = 3
+
+   JackSessionFlags {.importc.} = enum
+      JackSessionSaveError = 0x01,
+      JackSessionNeedTerminal = 0x02
+
+   JackSessionEvent {.importc: "jack_sesion_event_t", header: jackh.} = object
+      etype: JackSessionEventType
+      session_dir, client_uuid, command_line: cstring
+      flags: JackSessionFlags
+      reserved: uint32
+
+   JackSessionCallback = proc(event: ptr JackSessionEvent, arg: pointer) {.cdecl.}
+
 proc jack_get_version(major_ptr: ptr int, minor_ptr: ptr int, micro_ptr: ptr int, proto_ptr: ptr int) {.importc: "jack_get_version", header: jackh.}
 
 proc jack_get_version_string(): cstring {.importc: "jack_get_version_string", header: jackh.}
@@ -320,4 +337,11 @@ proc jack_midi_max_event_size (port_buffer: pointer): csize {.importc: "jack_mid
 proc jack_midi_event_reserve (port_buffer: pointer, time: Jack_nframes, data_size: csize): ptr JackMidiData {.importc: "jack_midi_event_reserve ", header: jackh.}
 proc jack_midi_event_write (port_buffer: pointer, time: Jack_nframes, data: ptr Jack_midi_data, data_size: csize): int {.importc: "jack_midi_event_write ", header: jackh.}
 proc jack_midi_get_lost_event_count (port_buffer: pointer): uint32 {.importc: "jack_midi_get_lost_event_count ", header: jackh.}
+
+# Sessions
+
+proc jack_set_session_callback (client: PJackClient, session_callback: JackSessionCallback, arg: pointer): int {.importc: "jack_set_session_callback ", header: jackh.}
+proc jack_session_reply (client: PJackClient, event: ptr Jack_session_event): int {.importc: "jack_session_reply ", header: jackh.}
+proc jack_session_event_free (event: ptr Jack_session_event) {.importc: "jack_session_event_free ", header: jackh.}
+proc jack_client_get_uuid (client: PJackClient): cstring {.importc: "jack_client_get_uuid ", header: jackh.}
 
