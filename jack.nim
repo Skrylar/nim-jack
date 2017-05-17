@@ -1,4 +1,9 @@
-{.passl: "-ljack".}
+
+# Windows users are probably boned; mingw does have pkg-config and there
+# is a suckless version that doesn't require itself to build, but MS
+# compilers don't use either.
+{.passc: gorge("pkg-config --cflags jack".}
+{.passl: gorge("pkg-config --libs jack".}
 
 const
    jackh = "<jack/jack.h>"
