@@ -1,3 +1,5 @@
+# Hand-bound by Joshua "Skrylar" Cearley
+# MIT license, etc
 
 # Windows users are probably boned; mingw does have pkg-config and there
 # is a suckless version that doesn't require itself to build, but MS
