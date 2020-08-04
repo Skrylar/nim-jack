@@ -68,21 +68,21 @@ type
    Jack_latency_range* {.packed.} = object
        min, max: Jack_nframes
 
-   JackLatencyCallback* = proc(mode: Jack_latency_callback_mode, arg: pointer)
-   JackProcessCallback* = proc(nframes: Jack_nframes, arg: pointer): int
-   JackThreadCallback* = proc(arg: pointer)
-   JackThreadInitCallback* = proc(arg: pointer)
-   JackGraphOrderCallback* = proc(arg: pointer): int 
-   JackXRunCallback* = proc(arg: pointer): int 
-   JackBufferSizeCallback* = proc(nframes: Jack_nframes, arg: pointer): int 
-   JackSampleRateCallback* = proc(nframes: Jack_nframes, arg: pointer): int 
-   JackPortRegistrationCallback* = proc(port: Jack_port_id, r: int, arg: pointer)
-   JackClientRegistrationCallback* = proc(name: cstring, r: int, arg: pointer)
-   JackPortConnectCallback* = proc(a, b: Jack_port_id, connect: int, arg: pointer)
-   JackPortRenameCallback* = proc(port: Jack_port_id, old_name, new_name: cstring, arg: pointer)
-   JackFreewheelCallback* = proc(starting: int, arg: pointer)
-   JackShutdownCallback* = proc(arg: pointer)
-   JackInfoShutdownCallback* = proc(code: Jack_status, reason: cstring, arg: pointer)
+   JackLatencyCallback* = proc(mode: Jack_latency_callback_mode, arg: pointer) {.cdecl.}
+   JackProcessCallback* = proc(nframes: Jack_nframes, arg: pointer): cint {.cdecl.}
+   JackThreadCallback* = proc(arg: pointer) {.cdecl.}
+   JackThreadInitCallback* = proc(arg: pointer) {.cdecl.}
+   JackGraphOrderCallback* = proc(arg: pointer): cint  {.cdecl.}
+   JackXRunCallback* = proc(arg: pointer): cint  {.cdecl.}
+   JackBufferSizeCallback* = proc(nframes: Jack_nframes, arg: pointer): cint  {.cdecl.}
+   JackSampleRateCallback* = proc(nframes: Jack_nframes, arg: pointer): cint  {.cdecl.}
+   JackPortRegistrationCallback* = proc(port: Jack_port_id, r: cint, arg: pointer) {.cdecl.}
+   JackClientRegistrationCallback* = proc(name: cstring, r: cint, arg: pointer) {.cdecl.}
+   JackPortConnectCallback* = proc(a, b: Jack_port_id, connect: cint, arg: pointer) {.cdecl.}
+   JackPortRenameCallback* = proc(port: Jack_port_id, old_name, new_name: cstring, arg: pointer) {.cdecl.}
+   JackFreewheelCallback* = proc(starting: cint, arg: pointer) {.cdecl.}
+   JackShutdownCallback* = proc(arg: pointer) {.cdecl.}
+   JackInfoShutdownCallback* = proc(code: Jack_status, reason: cstring, arg: pointer) {.cdecl.}
 
    Jack_default_audio_sample* = float
 
